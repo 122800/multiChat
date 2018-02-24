@@ -35,31 +35,19 @@ function generateGraph() {
     // adds event listener on nodes to get answered message's id
     network.on('click', retrieveClickedNode);
 
-    // right-click listener to add custom icon node
-    network.on('oncontext', function(properties) {
-        const domCursor = properties.pointer.DOM;
-        const targetNodeId = network.getNodeAt(domCursor);
-        if(targetNodeId) {// if a node was clicked on
-            properties.event.preventDefault();
-            const targetNode = network.findNode(targetNodeId);
-
-            network.setSelection({// select clicked node
-                nodes: [targetNode]
-            });
-
-            ContextMenu.displayMenu("ADD_REACTION", domCursor, {
-                parentMessageId: targetNodeId
-            });
+    // double-click listener to generate WYSIWYG input menu
+    network.on('doubleClick', function(properties) {
+        if(getNodeUnderCursor(properties) !== null) {
+            ContextMenu.displayMenu("WYSIWYG", properties);
         }
     });
 
-    function retrieveClickedNode(properties) {
-        var ids = properties.nodes;
-        var clickedNodes = nodes.get(ids);
-        if (clickedNodes[0] !== undefined) {
-            parentMessageId = clickedNodes[0].id;
+    // right-click listener to add custom icon node
+    network.on('oncontext', function(properties) {
+        if(getNodeUnderCursor(properties)) {
+            ContextMenu.displayMenu("ADD_REACTION", properties);
         }
-    }
+    });
 
     drawFromLocalDB();
 }
@@ -79,6 +67,29 @@ function generateRoomOccupants(roomName, occupants, isPrimary) {
         addUserNode(id, id);
     }
 }
+
+/**
+ *
+ * @param {object} properties - the 'properties' parameter from a vis.js EventListener.
+ * @returns {boolean} success - whether or a node was successfully clicked on and stored in parentMessageId.
+ */
+function retrieveClickedNode(properties) {
+    var ids = properties.nodes;
+    var clickedNodes = nodes.get(ids);
+    if (clickedNodes[0] !== undefined) {
+        parentMessageId = clickedNodes[0].id;
+        return true;
+    }
+    return false;
+}
+
+function getIdUnderCursor(properties) {
+    return network.getNodeAt(properties.pointer.DOM);
+}
+function getNodeUnderCursor(properties) {
+    return network.findNode(getIdUnderCursor(properties));
+}
+
 /**
  * Adds an 'icon' node formatted to represent an existing user.
  * @param id
@@ -140,6 +151,8 @@ function addIconNode(data) {
 
 
 function addToRoom(msgType, dataString) {
+    // TODO remove msgType?
+    // TODO JSON.stringify done here instead of beforehand?
 
     //parses data
     var data = JSON.parse(dataString);

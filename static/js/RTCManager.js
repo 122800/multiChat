@@ -41,7 +41,7 @@ function dispatchIncomingData(id, msgType, dataString) {
         addToRoom(msgType, dataString);
     } else if (data.type === "syncDb") {
         console.log(data);
-        syncRoomDb(msgType, dataString)
+        syncRoomDb(msgType, dataString);
     }
 
 
